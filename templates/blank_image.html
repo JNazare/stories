@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if img_tag %}
+<div class="row">
+	<div class="col-xs-12">
+		<canvas id="c"></canvas>
+	</div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+	<script src="{{ url_for('static', filename='javascripts/fabric.min.js') }}"></script>
+	<script>
+
+		function wrapText (fabric_canvas, text, x, y, maxWidth, lineHeight) {
+		var lines = text.split("\n");
+		var wrapped_text = [];
+		for (var l = 0; l < lines.length; l++) {
+		    var line = "";
+		    var words = lines[l].split(" ");
+		    for (var w = 0; w < words.length; w++) {
+		        var testLine = line + words[w] + " ";
+		        var metrics = fabric_canvas.getContext('2d').measureText(testLine);
+		        console.log('metric', metrics);
+		        var testWidth = metrics.width;
+		        if (testWidth > maxWidth) {
+		            // add new fabric.Text
+		            //text_options.top = text_options.top + y;
+		            wrapped_text.push(line);
+		            //ctx.fillText(line, x, y);
+		            line = words[w] + " ";
+		            //y += lineHeight;
+		        } else {
+		            line = testLine;
+		        }
+		    }
+		    //text_options.top = text_options.top + y;
+		    wrapped_text.push(line);
+		    //ctx.fillText(line, x, y);
+		    //y += lineHeight;
+		}
+		return wrapped_text.join("\n");
+		}
+
+		var canvas = new fabric.Canvas('c');
+		var image = new Image();
+		image.src = "data:image/jpg;base64,{{ img_tag }}";
+		image.onload = function() {
+			image_width=this.width;
+			image_height=this.height;
+			image_height=300*image_height/image_width;
+			image_width=300
+			$('#c').attr({
+					width:image_width,
+					height:image_height}).css({
+					width:image_width,
+					height:image_height})
+			var imgInstance = new fabric.Image(image, {
+				left: 0,
+				top: 0,
+				width: image_width, 
+				height: image_height
+			});
+			canvas.setBackgroundImage(imgInstance, canvas.renderAll.bind(canvas));
+			console.log("{{text}}")
+			wrapped = wrapText(canvas, "{{text}}", {{bounds.left}}, {{bounds.height}}, {{bounds.width}}, 8)
+			var text = new fabric.Text(wrapped, { left: {{bounds.left}}, top: {{bounds.top}}, width: {{bounds.width}},  height: {{bounds.height}}, fontSize: 8});
+			canvas.add(text);
+			// { left: "{{bounds.left}}", top: "{{bounds.top}}", width: "{{bounds.width}}", height: "{{bounds.height}}" }
+			console.log("{{bounds.width}}")
+		}
+	</script>
+{% endblock %}

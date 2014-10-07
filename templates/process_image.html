@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if img_tag %}
+<div class="row">
+	<div class="col-xs-12">
+		<h5> Highlight the page text with your finger (CHANGE THIS)</h5>
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<form role="form" method="post" action="/erase/{{book_id}}/{{page_id}}">
+			<input type="hidden" name="bounds" id="bounds">
+			<button id="next-button" type="submit" class="btn btn-success">Next</button>
+		</form>
+		<br><br>
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<canvas id="c"></canvas>
+	</div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+	<script src="{{ url_for('static', filename='javascripts/fabric.min.js') }}"></script>
+	<script>
+		var canvas = new fabric.Canvas('c');
+		var image = new Image();
+		image.src = "data:image/jpg;base64,{{ img_tag }}";
+		image.onload = function() {
+			image_width=this.width;
+			image_height=this.height;
+			image_height=300*image_height/image_width;
+			image_width=300
+			$('#c').attr({
+					width:image_width,
+					height:image_height}).css({
+					width:image_width,
+					height:image_height})
+			var imgInstance = new fabric.Image(image, {
+				left: 0,
+				top: 0,
+				width: image_width, 
+				height: image_height
+			});
+			bounding_rect = new fabric.Rect({ fill: '#f55', top: 100, left: 50, width: 150, height: 100 });
+			canvas.add(bounding_rect);
+			canvas.item(0).set({
+			borderColor: 'black',
+			cornerColor: 'black',
+			cornerSize: 25,
+			transparentCorners: true,
+			opacity: 0.7
+			});
+
+			canvas.hoverCursor = 'pointer';
+			canvas.item(0).lockRotation = true;
+			canvas.setActiveObject(canvas.item(0));
+			canvas.setBackgroundImage(imgInstance, canvas.renderAll.bind(canvas));
+
+			$('#next-button').click(function(){
+				var bounding_box = bounding_rect.getBoundingRect();
+				$('#bounds').val(JSON.stringify(bounding_box));
+			});
+		
+		}
+	</script>
+{% endblock %}

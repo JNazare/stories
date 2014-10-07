@@ -1,0 +1,17 @@
+.settings-icon{
+	font-size: 18px;
+}
+
+.settings-button{
+	height: 50px;
+};
+
+#content{
+	padding: 20px;
+	padding-top: 70px;
+}
+
+.form-horizontal{
+	padding-left: 40px;
+	padding-right: 40px;
+}
