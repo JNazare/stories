@@ -1,4 +1,4 @@
-from flask import Flask, url_for, request, session, redirect, escape, render_template
+from flask import Flask, url_for, request, session, redirect, render_template
 from flask.ext.pymongo import PyMongo
 import base64
 from werkzeug import secure_filename
@@ -11,71 +11,66 @@ import server as server
 import cv2
 import numpy as np
 import tesseract
-import ast
-
-import sys
-from os import system
-import subprocess
 import cv2.cv as cv
-from skimage import filter
 import json
+import secrets
 
 app = Flask(__name__)
 mongo = PyMongo(app)
+app.secret_key = secrets.db_secret()
 
+# Global Vars
 TMP_FILEPATH = "tmp/page.jpg"
-# set the secret key.  keep this really secret:
-
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
+def logged_in(session):
+    return True if 'email' in session else False
+
 def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-def import_binary_image(file_object):
-    raw_data = file_object.read()
-    data = StringIO(raw_data)
-    im = Image.open(data)
-    return im, raw_data
-
-def export_binary_image_to_buffer(im, quality=None):
-    export = StringIO()
-    if quality:
-        im.save(export, format='JPEG', quality=quality)
-    else:
-        im.save(export, format='JPEG')
-    binary_data = export.getvalue().encode('base64')
-    return binary_data
-
-def start_new_book(cover_page):
+def init_new_book():
     books = mongo.db.books
-    im, raw_data = import_binary_image(cover_page)
-    compressed_binary_data = export_binary_image_to_buffer(im, quality=20)
-    # tmp_page.save(TMP_FILEPATH)
-    raw_binary_data = export_binary_image_to_buffer(im)
     book_details = {'compressed_pages':[], 'blank_pages':[], "bounding_boxes":[], "text":[]}
-    # book_details['raw_pages'].append(raw_binary_data)
-    book_details['compressed_pages'].append(compressed_binary_data)
     book_details['created_at']=datetime.datetime.utcnow()
     book_details['last_opened']=datetime.datetime.utcnow()
     book_id = books.insert(book_details, manipulate=True)
+    return str(book_id)
+
+def save_tmp_page(raw_data):
     with open(TMP_FILEPATH, 'wb') as f:
         f.write(raw_data)
-    return book_id, len(book_details['compressed_pages'])-1
+    f.close()
+    return True
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if 'email' in session:
-        if request.method == 'POST':
-            page = request.files['page']
-            if page and allowed_file(page.filename):
-                filename = secure_filename(page.filename)
-                book_id, page_id = start_new_book(page)
-                if book_id:
-                    process_url = 'process/'+str(book_id)+"/"+str(page_id)
-                    return redirect(process_url)
-        return render_template('index.html')
-    return redirect(url_for('login'))
+def compress_image(im, quality):
+    export = StringIO()
+    im.save(export, format='JPEG', quality=quality)
+    binary_data = export.getvalue().encode('base64')
+    return binary_data
+
+def update_book(books, book_id, book_fields, book_values):
+    updates = {}
+    book = books.find_one({"_id":ObjectId(book_id)})
+    for index in range(len(book_fields)):
+        tmp = book[book_fields[index]]
+        tmp.append(book_values[index])
+        updates[book_fields[index]]= tmp
+    books.update({'_id':ObjectId(book_id)}, {"$set": updates})
+    return True
+
+def make_and_save_new_page(book_id, page):
+    books = mongo.db.books
+    book = books.find_one({"_id":ObjectId(book_id)})
+    if page and allowed_file(page.filename):
+        raw_data = page.read()
+        data = StringIO(raw_data)
+        im = Image.open(data)
+        compressed_binary_data = compress_image(im, quality=20)
+        update_book(books, book_id, ['compressed_pages'], [compressed_binary_data])
+        save_tmp_page(raw_data)
+        return str(len(book['compressed_pages'])-1)
+    return False
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -116,65 +111,49 @@ def signup():
         return redirect(url_for('index'))
     return render_template('signup.html')
 
-@app.route('/process/<book_id>/<page_id>', methods=['GET', 'POST'])
-def process(book_id, page_id):
-    if 'email' in session:
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if logged_in(session):
+        if request.method == 'POST':
+            cover_page = request.files['page']
+            book_id = init_new_book()
+            page_id = make_and_save_new_page(book_id, cover_page)
+            if book_id and page_id: return redirect(url_for('select', book_id=book_id, page_id=page_id))
+        return render_template('index.html')
+    return redirect(url_for('login'))
+
+@app.route('/select/<book_id>/<page_id>', methods=['GET', 'POST'])
+def select(book_id, page_id):
+    if logged_in(session):
         books = mongo.db.books
         book = books.find_one({"_id":ObjectId(book_id)})
         page_to_process=book['compressed_pages'][int(page_id)]
         return render_template('process_image.html', img_tag=urllib.quote(page_to_process.rstrip('\n')), book_id=book_id, page_id=page_id)
     return redirect(url_for('login'))
 
-@app.route('/erase/<book_id>/<page_id>', methods=['GET', 'POST'])
-def erase(book_id, page_id):
-    if 'email' in session:
-        bounds = request.form['bounds']
+@app.route('/process/<book_id>/<page_id>', methods=['GET', 'POST'])
+def process(book_id, page_id):
+    if logged_in(session):
         books = mongo.db.books
-        book = books.find_one({"_id":ObjectId(book_id)})
+        bounds = request.form['bounds']
         img = cv2.imread(TMP_FILEPATH)
-        # buf = np.fromstring(base64.b64decode(page_to_process), dtype=np.uint8)
-        # img = cv2.imdecode(buf, cv2.CV_LOAD_IMAGE_UNCHANGED)
         blank_image = server.inpaint_image(img, bounds)
         binary_blank_image = base64.encodestring(cv2.imencode('*.jpg', blank_image)[1]) #export_binary_image_to_buffer(Image.fromarray(blank_image), quality=30)
-        blank_pages = book['blank_pages']
-        bounding_boxes = book['bounding_boxes']
-        blank_pages.append(binary_blank_image)
-        bounding_boxes.append(bounds)
-        books.update({'_id':ObjectId(book_id)}, {"$set": {'blank_pages': blank_pages, 'bounding_boxes': bounding_boxes}})
-        return redirect("/extract_text/"+book_id+"/"+page_id)
+        img = cv.LoadImage(TMP_FILEPATH)
+        text = server.run_ocr(img)
+        update_book(books, book_id, ['blank_pages', 'bounding_boxes', 'text'], [binary_blank_image, bounds, text])
+        return redirect(url_for('read', book_id=book_id, page_id=page_id))
     return redirect(url_for('login'))
-    
-@app.route('/extract_text/<book_id>/<page_id>', methods=['GET', 'POST'])
-def extract_text(book_id, page_id):
-    books = mongo.db.books
-    book = books.find_one({"_id":ObjectId(book_id)})
-    img = cv.LoadImage(TMP_FILEPATH)
-    text = server.run_ocr(img)
-    texts = book['text']
-    texts.append(text)
-    # texts.append(text)
-    books.update({'_id':ObjectId(book_id)}, {"$set": {'text': texts}})
-    return redirect('/read/'+book_id+"/"+page_id)
 
 @app.route('/read/<book_id>/<page_id>')
 def read(book_id, page_id):
     books = mongo.db.books
     book = books.find_one({"_id":ObjectId(book_id)})
     blank_page = book["blank_pages"][int(page_id)]
-    text = book['text'][int(page_id)]
-    text = str(text)
-    print text
+    text = str(book['text'][int(page_id)])
     bounds = book['bounding_boxes'][int(page_id)]
     bounds = json.loads(bounds)
     return render_template('blank_image.html', img_tag=urllib.quote(blank_page.rstrip('\n')), book_id=book_id, page_id=page_id, text=text, bounds=bounds)
-
-@app.route('/original_image/<int:book>/<int:page>')
-def original_image(book, page):
-    return 'Show original image'
-
-@app.route('/blank_image/read/<int:book>/<int:page>')
-def blank_image(book, page):
-    return 'Show blank image'
 
 @app.route('/settings')
 def settings():
@@ -187,9 +166,3 @@ def page_not_found(error):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
-
-
-
-    # buf = np.fromstring(base64.b64decode(page_to_process), dtype=np.uint8)
-    # img = cv2.imdecode(buf, cv2.CV_LOAD_IMAGE_UNCHANGED)
-    # text = server.run_ocr(img)
