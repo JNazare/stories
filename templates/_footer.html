@@ -1,0 +1,19 @@
+<nav class="navbar navbar-default navbar-fixed-bottom navbar-inverse" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      {% if process %}
+        <div class="col-xs-12">
+          <form id="submit-page" role="form" class="form-inline" method="post" action="/process/{{book_id}}/{{page_id}}">
+            <input type="hidden" name="bounds" id="bounds">
+            <button id="redo-button" type="button" class="btn btn-danger">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+            <button id="next-button" type="submit" class="btn btn-success pull-right">
+              <span class="glyphicon glyphicon-ok"></span>
+            </button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</nav>

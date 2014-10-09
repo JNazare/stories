@@ -1,11 +1,13 @@
-<nav class="navbar navbar-default navbar-fixed" role="navigation">
+<nav class="navbar navbar-default navbar-fixed navbar-inverse" role="navigation">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="/">STORYTELLER</a>
+      <a class="navbar-brand" href="/">
+        <img src="{{ url_for('static', filename='images/book.png') }}" width="30px"> &nbsp;&nbsp;Storyteller
+      </a>
       <button type="button" class="btn btn-link settings-button pull-right">
         <a href="/settings">
         	<span class="glyphicon glyphicon-cog settings-icon"></span>
-		</a>
+		    </a>
       </button>
     </div>
   </div>

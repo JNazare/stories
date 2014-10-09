@@ -3,7 +3,7 @@
 {% block content %}
 
 {% if img_tag %}
-<div class="row">
+<!-- <div class="row">
 	<div class="col-xs-12">
 		<h5> Highlight the page text with your finger (CHANGE THIS)</h5>
 	</div>
@@ -16,9 +16,9 @@
 		</form>
 		<br><br>
 	</div>
-</div>
+</div> -->
 <div class="row">
-	<div class="col-xs-12">
+	<div class="col-xs-12 for-canvas">
 		<canvas id="c"></canvas>
 	</div>
 </div>
@@ -47,19 +47,44 @@
 				width: image_width, 
 				height: image_height
 			});
-			bounding_rect = new fabric.Rect({ fill: '#f55', top: 100, left: 50, width: 150, height: 100 });
-			canvas.add(bounding_rect);
-			canvas.item(0).set({
-			borderColor: 'black',
-			cornerColor: 'black',
-			cornerSize: 25,
-			transparentCorners: true,
-			opacity: 0.7
+
+			background_rect = new fabric.Rect({
+				fill: 'black',
+				top: 0,
+				left: 0,
+				width: image_width,
+				height: image_height
 			});
 
+			background_rect.set({
+				opacity: 0.40
+			});
+
+			background_rect.selectable = false;
+			canvas.add(background_rect);
+
+			bounding_rect = new fabric.Rect({ 
+				fill: 'white', 
+				top: 100, 
+				left: 50, 
+				width: 150, 
+				height: 100 });
+
+			bounding_rect.set({
+				borderColor: 'white',
+				cornerColor: 'white',
+				cornerSize: 15,
+				transparentCorners: true,
+				opacity: 0.4, 
+				selectionLineWidth: 5,
+				hasRotatingPoint: false
+			});
+			bounding_rect.lockRotation = true;
+			bounding_rect.hasBorders = false;
+			canvas.add(bounding_rect);
+
 			canvas.hoverCursor = 'pointer';
-			canvas.item(0).lockRotation = true;
-			canvas.setActiveObject(canvas.item(0));
+			canvas.setActiveObject(canvas.item(1));
 			canvas.setBackgroundImage(imgInstance, canvas.renderAll.bind(canvas));
 
 			$('#next-button').click(function(){
