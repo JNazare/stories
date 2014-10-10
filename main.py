@@ -73,8 +73,9 @@ def make_and_save_new_page(book_id, page):
         compressed_binary_data = compress_image(im, quality=20)
         html_ready_compressed_image = urllib.quote(compressed_binary_data.rstrip('\n'))
         
-        original_im = cv2.imread(TMP_PAGE_FILEPATH)
-        binary_image = base64.encodestring(cv2.imencode('*.jpg', original_im)[1])
+        # original_im = cv2.imread(TMP_PAGE_FILEPATH)
+        # binary_image = base64.encodestring(cv2.imencode('*.jpg', original_im)[1])
+        binary_image = compress_image(im, quality=50)
         html_ready_image = urllib.quote(binary_image.rstrip('\n'))
 
         update_book(books, book_id, ['compressed_pages', 'background_pages'], [html_ready_compressed_image, html_ready_image])
@@ -202,11 +203,10 @@ def read(book_id, page_id):
         books = mongo.db.books
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_pages = book["compressed_pages"]
-        background_page = book["background_pages"][int(page_id)]
         text = str(book['text'][int(page_id)])
         bounds = book['bounding_boxes'][int(page_id)]
         return render_template('read_page.html', 
-            img_tag=background_page, 
+            read=True,
             book_id=book_id,
             page_id=page_id,
             text=text,

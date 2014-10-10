@@ -52,6 +52,7 @@ def set_bounds(bounds):
 
 def save_text_area(img, bounds):
 	top, left, width, height = set_bounds(bounds)
+	top, left, width, height = int(top), int(left), int(width), int(height)
 	crop_img = img[top:top+height, left:left+width]
 	imgray = cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
 	blur = cv2.GaussianBlur(imgray,(5,5),0)
