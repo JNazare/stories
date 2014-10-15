@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row-fluid">
+	{% for text in book_text %}
+	<div class="col-xs-12 page">
+		<div class="col-xs-12 outside">
+			<form id="delete-page" role="form" class="form-inline" method="post" action="/delete/{{book_id}}/{{loop.index -1}}">
+				<input type="hidden" name="page_index" value="{{loop.index -1}}">
+	            <button id="delete-button" type="submit" class="btn btn-danger pull-right">
+					<i class="fa fa-times"></i>
+				</button>
+          	</form>
+		</div>
+		<div class="col-xs-2 page-num">
+			<h1> {{loop.index}} </h1>
+		</div>
+		<div class="col-xs-10 page-inner">
+			<p> {{text}} </p>
+		</div>
+	</div>
+	{% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+	$(document).ready(function() {
+		$("#upload-submit").hide();
+		var wrapper = $('<div/>').css({height:0,width:0,'overflow':'hidden'});
+		var fileInput = $(':file').wrap(wrapper);
+
+		fileInput.change(function(){
+		    $this = $(this);
+		    $( "#upload-submit" ).trigger( "click" );
+		});
+
+		$('#file').click(function(){
+		    fileInput.click();
+		}).show();
+	});
+</script>
+{% endblock %}

@@ -2,27 +2,12 @@
 
 {% block content %}
 
-{% if img_tag %}
-<!-- <div class="row">
-	<div class="col-xs-12">
-		<h5> Highlight the page text with your finger (CHANGE THIS)</h5>
-	</div>
-</div>
-<div class="row">
-	<div class="col-xs-12">
-		<form role="form" method="post" action="/process/{{book_id}}/{{page_id}}">
-			<input type="hidden" name="bounds" id="bounds">
-			<button id="next-button" type="submit" class="btn btn-success">Next</button>
-		</form>
-		<br><br>
-	</div>
-</div> -->
 <div class="row">
 	<div class="col-xs-12 for-canvas">
-		<canvas id="c"></canvas>
+		<canvas id="c" height="225"></canvas>
 	</div>
 </div>
-{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
@@ -91,6 +76,9 @@
 				var bounding_box = bounding_rect.getBoundingRect();
 				$('#bounds').val(JSON.stringify(bounding_box));
 			});
+
+			$('.upper-canvas').css('height', '225');
+			$('.canvas-container').css('height', '225');
 		
 		}
 	</script>

@@ -14,6 +14,7 @@ import tesseract
 import cv2.cv as cv
 import json
 import secrets
+from bson import json_util
 
 app = Flask(__name__)
 mongo = PyMongo(app)
@@ -32,7 +33,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 def init_new_book():
-    books = mongo.db.books
+    books = mongo.db.testing_storyteller
     book_details = {'compressed_pages':[], 'background_pages':[], "bounding_boxes":[], "text":[]}
     book_details['created_at']=datetime.datetime.utcnow()
     book_details['last_opened']=datetime.datetime.utcnow()
@@ -62,7 +63,9 @@ def update_book(books, book_id, book_fields, book_values):
     return True
 
 def make_and_save_new_page(book_id, page):
-    books = mongo.db.books
+    print book_id
+    print page
+    books = mongo.db.testing_storyteller
     book = books.find_one({"_id":ObjectId(book_id)})
     if page and allowed_file(page.filename):
         raw_data = page.read()
@@ -136,24 +139,43 @@ def settings():
         return render_template('settings.html', nativelang=session['nativelang'])
     return redirect(url_for('login'))
 
-##############
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
+    """Home view"""
+    if logged_in(session):
+        books = mongo.db.testing_storyteller
+        books_json = list(books.find())
+        return render_template('library.html', library=True, books=books_json)
+    return redirect(url_for('login'))
+
+@app.route('/create', methods=['POST'])
+def create():
+    """Create book view"""
     if logged_in(session):
         if request.method == 'POST':
-            cover_page = request.files['page']
             book_id = init_new_book()
             page_id = str(0)
-            make_and_save_new_page(book_id, cover_page)
-            if book_id and page_id: return redirect(url_for('select', book_id=book_id, page_id=page_id))
-        return render_template('index.html')
+            pages_json = []
+        if request.method == 'GET':
+            books = mongo.db.testing_storyteller
+            pages_json = list(books.find_one({"_id":ObjectId(book_id)}))
+        return render_template('create.html', create=True, book_id=book_id, pages=pages_json)
+    return redirect(url_for('login'))
+
+@app.route('/append/<book_id>', methods=['GET'])
+def append(book_id):
+    """Add new pages view"""
+    if logged_in(session):
+        books = mongo.db.testing_storyteller
+        book = books.find_one({"_id":ObjectId(book_id)})
+        book_text = book['text']
+        return render_template('create.html', create=True, book_id=book_id, book_text=book_text)
     return redirect(url_for('login'))
 
 @app.route('/select/<book_id>/<page_id>', methods=['GET', 'POST'])
 def select(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.books
+        books = mongo.db.testing_storyteller
         book = books.find_one({"_id":ObjectId(book_id)})
         page_to_process=book['compressed_pages'][int(page_id)]
         return render_template('process_image.html', 
@@ -168,7 +190,7 @@ def select(book_id, page_id):
 @app.route('/add/<book_id>/<page_id>', methods=['GET', 'POST'])
 def add(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.books
+        books = mongo.db.testing_storyteller
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_page, background_page = make_and_save_new_page(book_id, request.files['page'])
         return render_template('process_image.html', 
@@ -181,7 +203,7 @@ def add(book_id, page_id):
 @app.route('/process/<book_id>/<page_id>', methods=['GET', 'POST'])
 def process(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.books
+        books = mongo.db.testing_storyteller
         bounds = request.form['bounds']
 
         img = cv2.imread(TMP_PAGE_FILEPATH)
@@ -192,15 +214,13 @@ def process(book_id, page_id):
         
         update_book(books, book_id, ['bounding_boxes', 'text'], [bounds, text])
         
-        return redirect(url_for('read', 
-            book_id=book_id, 
-            page_id=page_id))
+        return redirect(url_for('append', book_id=book_id))
     return redirect(url_for('login'))
 
 @app.route('/read/<book_id>/<page_id>')
 def read(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.books
+        books = mongo.db.testing_storyteller
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_pages = book["compressed_pages"]
         text = str(book['text'][int(page_id)])
@@ -212,6 +232,33 @@ def read(book_id, page_id):
             text=text,
             bounds=json.loads(bounds),
             thumbnails=compressed_pages)
+    return redirect(url_for('login'))
+
+
+@app.route('/delete/<book_id>/<page_id>', methods=['POST'])
+def delete(book_id, page_id):
+    """Delete a page"""
+    if logged_in(session):
+        books = mongo.db.testing_storyteller
+        book = books.find_one({"_id":ObjectId(book_id)})
+        page_id = int(request.form['page_index'])
+        updated_compressed_pages = book['compressed_pages']
+        updated_background_pages = book['background_pages']
+        updated_bounding_boxes = book['bounding_boxes']
+        updated_text = book['text']
+        updated_compressed_pages.pop(page_id)
+        updated_background_pages.pop(page_id)
+        updated_bounding_boxes.pop(page_id)
+        updated_text.pop(page_id)
+        books.update({'_id':ObjectId(book_id)}, {"$set": {
+            "compressed_pages": updated_compressed_pages,
+            "background_pages": updated_background_pages,
+            "bounding_boxes": updated_bounding_boxes,
+            "text": updated_text
+            }})
+        book = books.find_one({"_id":ObjectId(book_id)})
+        print book
+        return redirect(url_for('append', book_id=book_id))
     return redirect(url_for('login'))
 
 @app.errorhandler(404)

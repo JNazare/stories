@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row-fluid">
+	{% for book in books %}
+		{% if book.text|length > 0 %}
+			<div class="col-xs-6 book">
+				<a href="/read/{{book._id}}/0">
+					<img class="book-thumb" src="data:image/jpg;base64,{{ book.compressed_pages[0] }}" width="100%">
+				</a>
+			</div>
+		{% endif %}
+	{% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

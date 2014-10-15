@@ -1,11 +1,12 @@
 <nav class="navbar navbar-default navbar-fixed-bottom navbar-inverse" role="navigation">
   <div class="container-fluid">
     <div class="navbar-header">
+      
       {% if process %}
         <div class="col-xs-12">
           <form id="submit-page" role="form" class="form-inline" method="post" action="/process/{{book_id}}/{{page_id}}">
             <input type="hidden" name="bounds" id="bounds">
-            <button id="redo-button" type="button" class="btn btn-danger">
+            <button id="redo-button" type="button" class="btn btn-warning">
               <i class="fa fa-undo"></i>
             </button>
             <button id="next-button" type="submit" class="btn btn-success pull-right">
@@ -14,13 +15,65 @@
           </form>
         </div>
       {% endif %}
+
       {% if read %}
-        <a href="/read/{{book_id}}/{{page_id|int +1}}">
-          <button id="flip-button" type="button" class="btn btn-success pull-right">
-            <i class="fa fa-arrow-circle-right"></i>
+        {% if page_id|int < thumbnails|length -1 %}
+          {% set forward = page_id|int +1 %}
+        {% else %}
+          {% set forward = page_id|int %}
+        {% endif %}
+        {% if page_id|int > 0 %}
+          {% set backward = page_id|int -1 %}
+        {% else %}
+          {% set backward = page_id|int %}
+        {% endif %}
+        
+        <div class="col-xs-4">
+        <a href="/read/{{book_id}}/{{backward}}">
+          <button type="button" class="btn btn-link flip-button">
+            <i class="fa fa-arrow-left fa-2x"></i>
           </button>
         </a>
+        </div>
+        <div class="col-xs-4">
+        <button id="listen" type="button" class="btn btn-block btn-success listen-button">
+            <i class="fa fa-volume-up fa-2x"></i>
+        </button>
+        </div>
+        <div class="col-xs-4">
+        <a href="/read/{{book_id}}/{{forward}}">
+          <button type="button" class="btn btn-link pull-right flip-button">
+            <i class="fa fa-arrow-right fa-2x"></i>
+          </button>
+        </a>
+        </div>
       {% endif %}
+
+      {% if library %}
+        <div class="col-xs-12">
+          <form id="create-book" role="form" class="form-inline" method="post" action="/create">
+            <button id="create-book-button" type="submit" class="btn btn-success static-center-button">
+              <span class="glyphicon glyphicon-plus"></span>
+            </button>
+          </form>
+        </div>
+      {% endif %}
+
+      {% if create %}
+      <div class="col-xs-12">
+        <form action="/add/{{book_id}}/{{book_text|length}}" method=post enctype=multipart/form-data>
+            <div id="file">
+              <button id="upload-btn" type="button" class="btn btn-success static-center-button">
+                <span class="glyphicon glyphicon-plus"></span>
+              </button>
+            </div>
+            <input type=file name=page>
+            <input id='upload-submit' type=submit value=Upload>
+        </form>
+      </div>
+      {% endif %}
+
+
     </div>
   </div>
 </nav>
