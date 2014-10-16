@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% block stylesheets %}
+{% endblock %}
+
 {% block content %}
 
 {% if thumbnails %}
@@ -33,7 +36,8 @@
 </div>
 <div class="row reading">
 	<div class="col-xs-12 reading-col">
-		<p class="reading-text"> {{text}} </p>
+		<p id="animate-text" class="reading-text"> {{text}} </p>
+		<div id="message"></div>
 	</div>
 </div>
 {% endif %}
@@ -41,16 +45,61 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script> -->
+<!-- <script src="//code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script> -->
 <script>
-	$(document).ready(function() {
-		$('#listen').click(function(){
-			if ('speechSynthesis' in window) {
-				console.log('good to go');
-				var msg = new SpeechSynthesisUtterance('{{text}}');
-				msg.rate = 0.1;
-				window.speechSynthesis.speak(msg);
-			}
+
+	function onTick() {
+	    currentOffset++;
+	    if (currentOffset == wordSet.length) {
+	        return;
+	    }
+	    var text = "";
+	    for(var i = 0; i <= currentOffset; i++){
+	    	text = text.replace(/<\/?span[^>]*>/g,"");
+	     	text = text + '<span id="current" style="color : blue; font-weight : 900">' + wordSet[i] + '</span> ';   
+	    }
+	    text.trim();
+	    $("#animate-text").html(text);
+	}
+
+	function addSpans(){
+		var text = "{{text}}"
+		var words = text.split(" ");
+		var word_html = ""
+		for (i=0; i<words.length; i++){
+			word_html += '<span class="highlight">' + words[i] + '</span> '
+		}
+		$('#animate-text').html(word_html);
+		$('span.highlight').on("click", function() {
+		  	var selected_word = $(this).text().toLowerCase().trim();
+		  	selected_word = selected_word.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+		  	// post here to get translated word
+		  	$.post('/translate/'+selected_word, function(translated_word){
+		  		alert("English: " + selected_word + "\nGerman: " + translated_word);
+		  	});
 		});
+	}
+
+	$(document).ready(function() {
+		var utterance = new SpeechSynthesisUtterance("{{text}}");
+		utterance.lang = 'en-US';
+		utterance.rate = 0.05;
+		// utterance.rate = 0.7;
+	    wordSet = $("#animate-text").text().split(' ');
+	    currentOffset = 0;
+		utterance.onboundary = function(event) {
+		    onTick();
+		};
+		utterance.onend = function(event){
+			currentOffset = 0;
+			addSpans();
+		}
+		$('#listen').click(function(){
+			window.speechSynthesis.speak(utterance);
+		});
+
+		addSpans();
 
 		$("#thumbs").owlCarousel({
 			'itemsMobile': [479,4],

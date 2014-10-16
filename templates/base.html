@@ -11,6 +11,7 @@
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,900' rel='stylesheet' type='text/css'>
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    {% block stylesheets %}{% endblock %}
   </head>
   <body>
     {% include '_header.html' %}

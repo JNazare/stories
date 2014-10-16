@@ -186,3 +186,6 @@ body{
 	padding-right: 0px;
 }
 
+.word span{
+	animation: rotateWordsSecond 18s linear infinite 0s;
+}

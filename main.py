@@ -5,6 +5,7 @@ from werkzeug import secure_filename
 import datetime
 from bson.objectid import ObjectId
 import urllib
+import urllib2
 from PIL import Image
 from StringIO import StringIO
 import server as server
@@ -33,7 +34,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 def init_new_book():
-    books = mongo.db.testing_storyteller
+    books = mongo.db.library
     book_details = {'compressed_pages':[], 'background_pages':[], "bounding_boxes":[], "text":[]}
     book_details['created_at']=datetime.datetime.utcnow()
     book_details['last_opened']=datetime.datetime.utcnow()
@@ -65,7 +66,7 @@ def update_book(books, book_id, book_fields, book_values):
 def make_and_save_new_page(book_id, page):
     print book_id
     print page
-    books = mongo.db.testing_storyteller
+    books = mongo.db.library
     book = books.find_one({"_id":ObjectId(book_id)})
     if page and allowed_file(page.filename):
         raw_data = page.read()
@@ -143,7 +144,7 @@ def settings():
 def index():
     """Home view"""
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         books_json = list(books.find())
         return render_template('library.html', library=True, books=books_json)
     return redirect(url_for('login'))
@@ -157,7 +158,7 @@ def create():
             page_id = str(0)
             pages_json = []
         if request.method == 'GET':
-            books = mongo.db.testing_storyteller
+            books = mongo.db.library
             pages_json = list(books.find_one({"_id":ObjectId(book_id)}))
         return render_template('create.html', create=True, book_id=book_id, pages=pages_json)
     return redirect(url_for('login'))
@@ -166,7 +167,7 @@ def create():
 def append(book_id):
     """Add new pages view"""
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         book = books.find_one({"_id":ObjectId(book_id)})
         book_text = book['text']
         return render_template('create.html', create=True, book_id=book_id, book_text=book_text)
@@ -175,7 +176,7 @@ def append(book_id):
 @app.route('/select/<book_id>/<page_id>', methods=['GET', 'POST'])
 def select(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         book = books.find_one({"_id":ObjectId(book_id)})
         page_to_process=book['compressed_pages'][int(page_id)]
         return render_template('process_image.html', 
@@ -190,7 +191,7 @@ def select(book_id, page_id):
 @app.route('/add/<book_id>/<page_id>', methods=['GET', 'POST'])
 def add(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_page, background_page = make_and_save_new_page(book_id, request.files['page'])
         return render_template('process_image.html', 
@@ -203,7 +204,7 @@ def add(book_id, page_id):
 @app.route('/process/<book_id>/<page_id>', methods=['GET', 'POST'])
 def process(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         bounds = request.form['bounds']
 
         img = cv2.imread(TMP_PAGE_FILEPATH)
@@ -220,7 +221,7 @@ def process(book_id, page_id):
 @app.route('/read/<book_id>/<page_id>')
 def read(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_pages = book["compressed_pages"]
         text = str(book['text'][int(page_id)])
@@ -239,7 +240,7 @@ def read(book_id, page_id):
 def delete(book_id, page_id):
     """Delete a page"""
     if logged_in(session):
-        books = mongo.db.testing_storyteller
+        books = mongo.db.library
         book = books.find_one({"_id":ObjectId(book_id)})
         page_id = int(request.form['page_index'])
         updated_compressed_pages = book['compressed_pages']
@@ -260,6 +261,21 @@ def delete(book_id, page_id):
         print book
         return redirect(url_for('append', book_id=book_id))
     return redirect(url_for('login'))
+
+@app.route('/translate/<word>', methods=['POST'])
+def translate(word, to_langage="de", langage="auto"):
+    ''' Return the translation using google translate you must shortcut the langage 
+    you define (French = fr, English = en, Spanish = es, etc...) if you don't define 
+    anything it will detect it or use english by default '''
+    print 'in route'
+    agents = {'User-Agent':"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)"}
+    before_trans = 'class="t0">'
+    link = "http://translate.google.com/m?hl=%s&sl=%s&q=%s" % (to_langage, langage, word.replace(" ", "+"))
+    request = urllib2.Request(link, headers=agents)
+    page = urllib2.urlopen(request).read()
+    result = page[page.find(before_trans)+len(before_trans):]
+    result = result.split("<")[0]
+    return result
 
 @app.errorhandler(404)
 def page_not_found(error):
