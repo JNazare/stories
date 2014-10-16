@@ -75,7 +75,7 @@
 		  	var selected_word = $(this).text().toLowerCase().trim();
 		  	selected_word = selected_word.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"")
 		  	// post here to get translated word
-		  	$.post('/translate/'+selected_word, function(translated_word){
+		  	$.post('/translate/'+selected_word+"/{{lang}}", function(translated_word){
 		  		alert("English: " + selected_word + "\nGerman: " + translated_word);
 		  	});
 		});

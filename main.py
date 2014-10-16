@@ -226,7 +226,8 @@ def read(book_id, page_id):
         compressed_pages = book["compressed_pages"]
         text = str(book['text'][int(page_id)])
         bounds = book['bounding_boxes'][int(page_id)]
-        return render_template('read_page.html', 
+        return render_template('read_page.html',
+            lang=session['nativelang'].lower(), 
             read=True,
             book_id=book_id,
             page_id=page_id,
@@ -262,12 +263,10 @@ def delete(book_id, page_id):
         return redirect(url_for('append', book_id=book_id))
     return redirect(url_for('login'))
 
-@app.route('/translate/<word>', methods=['POST'])
-def translate(word, to_langage="de", langage="auto"):
-    ''' Return the translation using google translate you must shortcut the langage 
-    you define (French = fr, English = en, Spanish = es, etc...) if you don't define 
-    anything it will detect it or use english by default '''
-    print 'in route'
+@app.route('/translate/<word>/<lang>', methods=['POST'])
+def translate(word, lang, langage="en"):
+    codes = {"spanish": "es", "chinese": "zh", "arabic": "ar", "portuguese": "pt", "french": "fr", "german": "de"}
+    to_langage = codes[lang]
     agents = {'User-Agent':"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)"}
     before_trans = 'class="t0">'
     link = "http://translate.google.com/m?hl=%s&sl=%s&q=%s" % (to_langage, langage, word.replace(" ", "+"))
