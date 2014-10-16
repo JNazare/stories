@@ -57,7 +57,8 @@
 	    var text = "";
 	    for(var i = 0; i <= currentOffset; i++){
 	    	text = text.replace(/<\/?span[^>]*>/g,"");
-	     	text = text + '<span id="current" style="color : blue; font-weight : 900">' + wordSet[i] + '</span> ';   
+	     	// text = text + '<span id="current" style="color : blue; font-weight : 900">' + wordSet[i] + '</span> ';   
+	     	text = wordSet.slice(0,i).join(" ")+' <span id="current" style="color : red;font-weight : 900">' + wordSet[i] + '</span> '+wordSet.slice(i+1,wordSet.length).join(" ");
 	    }
 	    text.trim();
 	    $("#animate-text").html(text);
@@ -76,7 +77,7 @@
 		  	selected_word = selected_word.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"")
 		  	// post here to get translated word
 		  	$.post('/translate/'+selected_word+"/{{lang}}", function(translated_word){
-		  		alert("English: " + selected_word + "\nGerman: " + translated_word);
+		  		alert("English: " + selected_word + "\n{{lang | title}}: " + translated_word);
 		  	});
 		});
 	}
@@ -84,7 +85,7 @@
 	$(document).ready(function() {
 		var utterance = new SpeechSynthesisUtterance("{{text}}");
 		utterance.lang = 'en-US';
-		utterance.rate = 0.05;
+		utterance.rate = 0.1;
 		// utterance.rate = 0.7;
 	    wordSet = $("#animate-text").text().split(' ');
 	    currentOffset = 0;
