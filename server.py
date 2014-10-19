@@ -9,6 +9,7 @@ from skimage import filter
 import json
 from scipy.stats import mode
 from sklearn.cluster import KMeans
+import string
 
 # Global Vars
 TMP_FOLDER = "tmp/"
@@ -38,7 +39,9 @@ def run_ocr(img):
 		return False
 	
 def clean_text(txt):
-	txt = txt.strip().replace('\n', ' ')
+	txt = txt.strip()
+	txt = txt.translate(string.maketrans("",""), string.punctuation.replace(".", "").replace("!", ""))
+	txt = txt.replace('\n', ' ')
 	return txt
 
 def set_bounds(bounds):
@@ -54,9 +57,16 @@ def save_text_area(img, bounds):
 	top, left, width, height = set_bounds(bounds)
 	top, left, width, height = int(top), int(left), int(width), int(height)
 	crop_img = img[top:top+height, left:left+width]
+	cv2.imwrite("tmp/crop.jpg", crop_img)
 	imgray = cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
-	blur = cv2.GaussianBlur(imgray,(5,5),0)
-	ret,thresholded_image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+	cv2.imwrite("tmp/gray.jpg", imgray)
+	imgray = cv2.medianBlur(imgray, 5)
+	cv2.imwrite("tmp/blur.jpg", imgray)
+	thresholded_image = cv2.adaptiveThreshold(imgray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,15,4)
+	# imgray = cv2.cvtColor(crop_img,cv2.COLOR_BGR2GRAY)
+	# blur = cv2.GaussianBlur(imgray,(5,5),0) 
+	# adaptive blur global otsu threshold (scikit image)
+	# ret,thresholded_image = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 	cv2.imwrite(TMP_TEXT_FILEPATH, thresholded_image)
 	text = run_ocr(cv.LoadImage(TMP_TEXT_FILEPATH))
 	return True

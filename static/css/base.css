@@ -26,14 +26,25 @@ body{
 	padding-right: 40px;
 }
 
-.btn-success{
+.btn-success, .btn-success:hover{
 	font-size: 20px;
 	border-radius: 0px;
+	background-color: #88A61B;
+	border-color: #88A61B;
 }
 
-.btn-danger{
+.btn-danger, .btn-danger:hover{
 	font-size: 20px;
 	border-radius: 0px;
+	background-color: #D92525;
+	border-color: #D92525;
+}
+
+.btn-default, .btn-default:hover{
+	border-radius: 0px;
+	background-color: #0E3D59;
+	border-color: #0E3D59;
+	color: #FFFFFF;
 }
 
 #next-button{
@@ -54,7 +65,7 @@ body{
 }
 
 .selected{
-	border: 4px solid #0080FF;
+	border: 4px solid #F25C05;
 }
 
 #new-page{
@@ -95,7 +106,7 @@ body{
 }
 
 .flip-button{
-	margin-top: 4px;
+	margin-top: 2px;
 	margin-right: 4px;
 	margin-left: 4px;
 }
@@ -103,7 +114,7 @@ body{
 .listen-button{
 	border-radius: 0px;
 	margin-left: 4px;
-	margin-top: -1px;
+	margin-top: 1px;
 	margin-bottom: -1px;
 }
 
@@ -125,7 +136,8 @@ body{
 
 .static-center-button{
 	margin-left: 123px;
-	margin-top: 3px;
+	margin-top: 5px;
+	padding-top: 2px;
 }
 
 /*Signup page*/
@@ -152,6 +164,9 @@ body{
 .btn-warning{
 	font-size: 20px;
 	border-radius: 0px;
+	background-color: #F29F05;
+	border-color: #F29F05;
+
 }
 
 .new-page{
@@ -188,4 +203,9 @@ body{
 
 .word span{
 	animation: rotateWordsSecond 18s linear infinite 0s;
+}
+
+.edit-button{
+	padding-top: 3px;
+	padding-bottom: 8px;
 }

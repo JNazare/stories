@@ -34,7 +34,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 def init_new_book():
-    books = mongo.db.library
+    books = mongo.db.demo_books
     book_details = {'compressed_pages':[], 'background_pages':[], "bounding_boxes":[], "text":[]}
     book_details['created_at']=datetime.datetime.utcnow()
     book_details['last_opened']=datetime.datetime.utcnow()
@@ -66,7 +66,7 @@ def update_book(books, book_id, book_fields, book_values):
 def make_and_save_new_page(book_id, page):
     print book_id
     print page
-    books = mongo.db.library
+    books = mongo.db.demo_books
     book = books.find_one({"_id":ObjectId(book_id)})
     if page and allowed_file(page.filename):
         raw_data = page.read()
@@ -144,7 +144,7 @@ def settings():
 def index():
     """Home view"""
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         books_json = list(books.find())
         return render_template('library.html', library=True, books=books_json)
     return redirect(url_for('login'))
@@ -158,7 +158,7 @@ def create():
             page_id = str(0)
             pages_json = []
         if request.method == 'GET':
-            books = mongo.db.library
+            books = mongo.db.demo_books
             pages_json = list(books.find_one({"_id":ObjectId(book_id)}))
         return render_template('create.html', create=True, book_id=book_id, pages=pages_json)
     return redirect(url_for('login'))
@@ -167,7 +167,7 @@ def create():
 def append(book_id):
     """Add new pages view"""
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         book = books.find_one({"_id":ObjectId(book_id)})
         book_text = book['text']
         return render_template('create.html', create=True, book_id=book_id, book_text=book_text)
@@ -176,7 +176,7 @@ def append(book_id):
 @app.route('/select/<book_id>/<page_id>', methods=['GET', 'POST'])
 def select(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         book = books.find_one({"_id":ObjectId(book_id)})
         page_to_process=book['compressed_pages'][int(page_id)]
         return render_template('process_image.html', 
@@ -191,7 +191,7 @@ def select(book_id, page_id):
 @app.route('/add/<book_id>/<page_id>', methods=['GET', 'POST'])
 def add(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_page, background_page = make_and_save_new_page(book_id, request.files['page'])
         return render_template('process_image.html', 
@@ -204,7 +204,7 @@ def add(book_id, page_id):
 @app.route('/process/<book_id>/<page_id>', methods=['GET', 'POST'])
 def process(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         bounds = request.form['bounds']
 
         img = cv2.imread(TMP_PAGE_FILEPATH)
@@ -221,7 +221,7 @@ def process(book_id, page_id):
 @app.route('/read/<book_id>/<page_id>')
 def read(book_id, page_id):
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         book = books.find_one({"_id":ObjectId(book_id)})
         compressed_pages = book["compressed_pages"]
         text = str(book['text'][int(page_id)])
@@ -241,7 +241,7 @@ def read(book_id, page_id):
 def delete(book_id, page_id):
     """Delete a page"""
     if logged_in(session):
-        books = mongo.db.library
+        books = mongo.db.demo_books
         book = books.find_one({"_id":ObjectId(book_id)})
         page_id = int(request.form['page_index'])
         updated_compressed_pages = book['compressed_pages']

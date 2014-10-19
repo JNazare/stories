@@ -28,8 +28,9 @@
 <div class="row">
 	<div class="col-xs-12 edit-row">
 		<a href="/append/{{book_id}}">
-			<button class="btn btn-warning pull-right">
-				<span class="glyphicon glyphicon-pencil"></span>
+			<button class="btn btn-warning edit-button pull-right">
+				<!-- <span class="glyphicon glyphicon-pencil"></span> -->
+				<img src="{{ url_for('static', filename='images/pencil.png') }}" width="20px">
 			</button>
 		</a>
 	</div>
@@ -58,14 +59,14 @@
 	    for(var i = 0; i <= currentOffset; i++){
 	    	text = text.replace(/<\/?span[^>]*>/g,"");
 	     	// text = text + '<span id="current" style="color : blue; font-weight : 900">' + wordSet[i] + '</span> ';   
-	     	text = wordSet.slice(0,i).join(" ")+' <span id="current" style="color : red;font-weight : 900">' + wordSet[i] + '</span> '+wordSet.slice(i+1,wordSet.length).join(" ");
+	     	text = wordSet.slice(0,i).join(" ")+' <span id="current" style="color : #F25C05;">' + wordSet[i] + '</span> '+wordSet.slice(i+1,wordSet.length).join(" ");
 	    }
 	    text.trim();
 	    $("#animate-text").html(text);
 	}
 
 	function addSpans(){
-		var text = "{{text}}"
+		var text = "{{text}}".trim()
 		var words = text.split(" ");
 		var word_html = ""
 		for (i=0; i<words.length; i++){
@@ -83,10 +84,11 @@
 	}
 
 	$(document).ready(function() {
-		var utterance = new SpeechSynthesisUtterance("{{text}}");
+		text = "{{text}}".trim()
+		var utterance = new SpeechSynthesisUtterance(text);
 		utterance.lang = 'en-US';
-		utterance.rate = 0.1;
-		// utterance.rate = 0.7;
+		utterance.rate = 0.2;
+		// utterance.rate = 1;
 	    wordSet = $("#animate-text").text().split(' ');
 	    currentOffset = 0;
 		utterance.onboundary = function(event) {

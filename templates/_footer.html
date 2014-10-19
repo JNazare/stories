@@ -10,7 +10,8 @@
               <i class="fa fa-undo"></i>
             </button>
             <button id="next-button" type="submit" class="btn btn-success pull-right">
-              <span class="glyphicon glyphicon-ok"></span>
+              <!-- <span class="glyphicon glyphicon-ok"></span> -->
+              <img src="{{ url_for('static', filename='images/check.png') }}" width="20px">
             </button>
           </form>
         </div>
@@ -31,19 +32,22 @@
         <div class="col-xs-4">
         <a href="/read/{{book_id}}/{{backward}}">
           <button type="button" class="btn btn-link flip-button">
-            <i class="fa fa-arrow-left fa-2x"></i>
+            <!-- <i class="fa fa-arrow-left fa-2x"></i> -->
+            <img src="{{ url_for('static', filename='images/backward_arrow.png') }}" width="20px">
           </button>
         </a>
         </div>
         <div class="col-xs-4">
         <button id="listen" type="button" class="btn btn-block btn-success listen-button">
-            <i class="fa fa-volume-up fa-2x"></i>
+            <!-- <i class="fa fa-volume-up fa-2x"></i> -->
+            <img src="{{ url_for('static', filename='images/audio.png') }}" width="30px">
         </button>
         </div>
         <div class="col-xs-4">
         <a href="/read/{{book_id}}/{{forward}}">
           <button type="button" class="btn btn-link pull-right flip-button">
-            <i class="fa fa-arrow-right fa-2x"></i>
+            <!-- <i class="fa fa-arrow-right fa-2x"></i> -->
+            <img src="{{ url_for('static', filename='images/forward_arrow.png') }}" width="20px">
           </button>
         </a>
         </div>
@@ -53,7 +57,8 @@
         <div class="col-xs-12">
           <form id="create-book" role="form" class="form-inline" method="post" action="/create">
             <button id="create-book-button" type="submit" class="btn btn-success static-center-button">
-              <span class="glyphicon glyphicon-plus"></span>
+              <!-- <span class="glyphicon glyphicon-plus"></span> -->
+               <img src="{{ url_for('static', filename='images/plus.png') }}" width="20px">
             </button>
           </form>
         </div>
@@ -64,7 +69,8 @@
         <form action="/add/{{book_id}}/{{book_text|length}}" method=post enctype=multipart/form-data>
             <div id="file">
               <button id="upload-btn" type="button" class="btn btn-success static-center-button">
-                <span class="glyphicon glyphicon-plus"></span>
+                <!-- <span class="glyphicon glyphicon-plus"></span> -->
+                <img src="{{ url_for('static', filename='images/plus.png') }}" width="20px">
               </button>
             </div>
             <input type=file name=page>
