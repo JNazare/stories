@@ -188,8 +188,33 @@ body{
 }
 
 .edit-row{
-	margin-top: -20px;
-	padding-right: 0px;
+	margin-top: -10px;
+	background-color: #0E3D59;
+	border-color: #0E3D59;
+	color: #FFFFFF;
+}
+
+.edit-col{
+	padding-left: 3px;
+	padding-top: 4px;
+	background-color: #0E3D59;
+	border-color: #0E3D59;
+	color: #FFFFFF;
+	padding-bottom: 5px;
+}
+
+.english-col{
+	background-color: #0E3D59;
+	border-color: #0E3D59;
+	color: #FFFFFF;
+	min-height: 10px;
+}
+
+.nativelang-col{
+	background-color: #0E3D59;
+	border-color: #0E3D59;
+	color: #FFFFFF;
+	min-height: 10px;
 }
 
 #delete-button{
@@ -208,4 +233,11 @@ body{
 .edit-button{
 	padding-top: 3px;
 	padding-bottom: 8px;
+
+}
+
+.owl-wrapper-outer{
+	background-color: #222;
+	border-color: #333;
+	color: #FFFFFF;
 }

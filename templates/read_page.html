@@ -25,14 +25,26 @@
 		{% endfor %}
 	</div>
 </div>
-<div class="row">
-	<div class="col-xs-12 edit-row">
+<div class="row edit-row">
+	<div class="col-xs-2 edit-col">
 		<a href="/append/{{book_id}}">
-			<button class="btn btn-warning edit-button pull-right">
+			<button class="btn btn-warning edit-button">
 				<!-- <span class="glyphicon glyphicon-pencil"></span> -->
 				<img src="{{ url_for('static', filename='images/pencil.png') }}" width="20px">
 			</button>
 		</a>
+	</div>
+	<div class="col-xs-5 english-col">
+		<span class="show-translation">
+			<strong class="small"> English </strong>
+			<p id="english-word"></p>
+		</span>
+	</div>
+	<div class="col-xs-5 nativelang-col">
+		<span class="show-translation">
+			<strong class="small"> {{lang | title}} </strong>
+			<p id="nativelang-word"></p>
+		</span>
 	</div>
 </div>
 <div class="row reading">
@@ -78,16 +90,20 @@
 		  	selected_word = selected_word.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g,"")
 		  	// post here to get translated word
 		  	$.post('/translate/'+selected_word+"/{{lang}}", function(translated_word){
-		  		alert("English: " + selected_word + "\n{{lang | title}}: " + translated_word);
+		  		$("#english-word").text(selected_word);
+		  		$("#nativelang-word").text(translated_word);
+		  		$(".show-translation").show()
+		  		// alert("English: " + selected_word + "\n{{lang | title}}: " + translated_word);
 		  	});
 		});
 	}
 
 	$(document).ready(function() {
+		$(".show-translation").hide()
 		text = "{{text}}".trim()
 		var utterance = new SpeechSynthesisUtterance(text);
 		utterance.lang = 'en-US';
-		utterance.rate = 0.2;
+		utterance.rate = 0.1;
 		// utterance.rate = 1;
 	    wordSet = $("#animate-text").text().split(' ');
 	    currentOffset = 0;

@@ -10,6 +10,7 @@ import json
 from scipy.stats import mode
 from sklearn.cluster import KMeans
 import string
+import re
 
 # Global Vars
 TMP_FOLDER = "tmp/"
@@ -42,6 +43,7 @@ def clean_text(txt):
 	txt = txt.strip()
 	txt = txt.translate(string.maketrans("",""), string.punctuation.replace(".", "").replace("!", ""))
 	txt = txt.replace('\n', ' ')
+	txt = re.sub(r'\s+', ' ', txt)
 	return txt
 
 def set_bounds(bounds):
