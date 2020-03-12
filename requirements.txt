@@ -43,7 +43,7 @@ numpy==1.9.0
 ocropy==0.6
 patsy==0.3.0
 praw==2.1.18
-psutil==2.1.1
+psutil==5.6.6
 py==1.4.24
 pycurl==7.19.5
 pygame==1.9.2a0
