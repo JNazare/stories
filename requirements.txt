@@ -27,7 +27,7 @@ gensim==0.9.1
 google-api-python-client==1.2
 gunicorn==17.5
 html5lib==0.999
-httplib2==0.9
+httplib2==0.19.0
 itsdangerous==0.22
 jabbapylib==0.3.8
 matplotlib==1.4.0
